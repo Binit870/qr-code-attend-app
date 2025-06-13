@@ -1,0 +1,14 @@
+# Node.js (backend)
+/qr-attend-backend/node_modules
+/qr-attend-backend/.env
+/qr-attend-backend/logs
+*.log
+
+# React (frontend)
+/qr-attend-frontend/node_modules
+/qr-attend-frontend/build
+/qr-attend-frontend/.env
+
+# Common
+.DS_Store
+.env
