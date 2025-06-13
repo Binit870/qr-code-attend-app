@@ -20,7 +20,8 @@ export default function Register({ onSwitchToLogin }) {
 
     try {
       const res = await API.post('/auth/register', data);
-      alert('✅ Registered successfully! Now login.');
+alert(`✅ ${res.data.message || 'Registered successfully!'}`);
+
       if (onSwitchToLogin) onSwitchToLogin();
     } catch (err) {
       alert('❌ Registration failed');
