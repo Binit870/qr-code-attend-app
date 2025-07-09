@@ -41,7 +41,15 @@ export default function AdminPanel() {
                 >
                   <td className="p-2">{rec.userId?.name || '—'}</td>
                   <td className="p-2">{new Date(rec.date).toLocaleDateString()}</td>
-                  <td className="p-2">{rec.time}</td>
+                  <td className="p-2">
+  {new Date(rec.time).toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })}
+</td>
+
                   <td className="p-2">{rec.isValid ? '✅' : '❌'}</td>
                 </tr>
               ))}

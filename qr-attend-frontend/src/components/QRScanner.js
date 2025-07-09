@@ -1,22 +1,29 @@
 import QrScanner from 'react-qr-scanner';
 import API from '../utils/api';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function QRScanner() {
   const [message, setMessage] = useState('');
+  const scanLock = useRef(false); // 🔒 Lock to prevent multiple scans
 
   const handleScan = async (data) => {
-    if (data) {
-      try {
-        const parsed = JSON.parse(data.text || data);
-        await API.post('/attendance/mark', parsed);
-        setMessage('✅ Attendance marked!');
-        setTimeout(() => setMessage(''), 3000);
-      } catch (err) {
-        setMessage('❌ Invalid QR code');
-        setTimeout(() => setMessage(''), 3000);
-      }
+    if (!data || scanLock.current) return;
+
+    try {
+      const parsed = JSON.parse(data.text || data);
+
+      scanLock.current = true; // Lock further scans
+      await API.post('/attendance/mark', parsed);
+      setMessage('✅ Attendance marked!');
+    } catch (err) {
+      console.error("Scan error:", err);
+      setMessage('❌ Invalid QR code');
     }
+
+    setTimeout(() => {
+      setMessage('');
+      scanLock.current = false; // Unlock after 3 seconds
+    }, 3000);
   };
 
   const handleError = (err) => {
@@ -32,6 +39,11 @@ export default function QRScanner() {
           style={{ width: '100%' }}
           onError={handleError}
           onScan={handleScan}
+          constraints={{
+            video: {
+              facingMode: { ideal: 'environment' },
+            }
+          }}
         />
       </div>
 
