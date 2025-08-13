@@ -10,35 +10,34 @@ import attendanceRoutes from './routes/attendanceRoutes.js';
 dotenv.config();
 const app = express();
 
-// ✅ Fix CORS: Allow specific origins including localhost and deployed frontend
+// ✅ Allowed origins without trailing slash
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://qr-code-attendace-app.netlify.app'
+];
+
+// ✅ CORS middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://qr-code-attendace-app.netlify.app/'], // Add deployed frontend URL here if needed
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed for this origin: ' + origin));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
+  credentials: true
 }));
 
-// ✅ Handle preflight requests properly
+// ✅ Handle preflight requests
 app.options('*', cors());
 
-// ✅ Manual CORS Headers for Render
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // No wildcard!
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // Instant response to preflight
-  }
-  next();
-});
-
-
-// ✅ Other middleware
+// ✅ Middleware
 app.use(express.json());
 
 // ✅ MongoDB connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("Mongo DB connected"))
+  .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("Mongo connection error:", err));
 
 // ✅ Routes
