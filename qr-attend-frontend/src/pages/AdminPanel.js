@@ -1,56 +1,71 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import API from '../utils/api';
 
 export default function AdminPanel() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     API.get('/attendance/all')
-      .then((res) => setRecords(res.data))
-      .catch((err) => console.error("Error loading attendance:", err))
+      .then((res) => {
+        // DEBUG: Log the API response to the console to check its structure.
+        console.log('API Response:', res.data); 
+        setRecords(res.data);
+      })
+      .catch((err) => {
+        console.error("Error loading attendance:", err);
+        setError("Failed to load records.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="mt-6">
-      <h2 className="text-xl font-bold mb-4 text-center text-blue-700">Attendance Records</h2>
+    <div className="mt-6 p-4">
+      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Attendance Records</h2>
 
       {loading ? (
         <p className="text-center text-gray-600">🔄 Loading attendance data...</p>
+      ) : error ? (
+        <p className="text-center text-red-500">{error}</p>
       ) : records.length === 0 ? (
         <p className="text-center text-gray-600">No attendance records found.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 rounded shadow-sm">
-            <thead className="bg-gray-200 text-gray-700">
+        <div className="overflow-x-auto shadow-lg rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-100">
               <tr>
-                <th className="p-2 text-sm">Name</th>
-                <th className="p-2 text-sm">Date</th>
-                <th className="p-2 text-sm">Time</th>
-                <th className="p-2 text-sm">Valid</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Date</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Time</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Valid QR</th>
               </tr>
             </thead>
-            <tbody>
-              {records.map((rec, idx) => (
-                <tr
-                  key={idx}
-                  className={`text-center text-sm ${
-                    idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                  }`}
-                >
-                  <td className="p-2">{rec.userId?.name || '—'}</td>
-                  <td className="p-2">{new Date(rec.date).toLocaleDateString()}</td>
-                  <td className="p-2">
-  {new Date(rec.time).toLocaleTimeString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })}
-</td>
-
-                  <td className="p-2">{rec.isValid ? '✅' : '❌'}</td>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {records.map((rec) => (
+                <tr key={rec._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {rec.userId?.name || 'Unknown User'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {/* FIX: Use the pre-formatted date from the API */}
+                    {rec.formattedDate}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {/* FIX: Use the pre-formatted time from the API */}
+                    {rec.formattedTime}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {rec.isValid ? (
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                        No
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
