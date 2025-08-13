@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import QrScanner from 'react-qr-scanner';
 import API from '../utils/api'; // Your API utility
 
-// This single component now handles both scanning and displaying records.
 export default function QRScanner() {
   // State for the QR scanner
   const [message, setMessage] = useState('');
+  const [scannerKey, setScannerKey] = useState(0); // for remounting scanner
   const scanLock = useRef(false);
 
   // State for the attendance list
@@ -14,54 +14,47 @@ export default function QRScanner() {
   const [loading, setLoading] = useState(true);
 
   // --- Attendance List Logic ---
-
-  // Function to fetch attendance data from the backend
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
       const res = await API.get('/attendance/all');
-      // The backend sends pre-formatted date and time, so we use it directly.
       setRecords(res.data);
-      setError(''); // Clear any previous errors
+      setError('');
     } catch (err) {
       console.error('Failed to fetch attendance:', err);
       setError('❌ Could not load attendance records.');
     } finally {
       setLoading(false);
     }
-  }, []); // useCallback prevents re-creating this function on every render
+  }, []);
 
-  // useEffect to fetch data when the component first loads
   useEffect(() => {
     fetchAttendance();
   }, [fetchAttendance]);
 
-
   // --- QR Scanner Logic ---
-
   const handleScan = async (data) => {
     if (!data || scanLock.current) return;
-    scanLock.current = true; // Prevent multiple scans at once
+    scanLock.current = true; // lock scan
 
     try {
       const parsed = JSON.parse(data.text || data);
       const res = await API.post('/attendance/mark', parsed);
       setMessage(res.data.message || '✅ Attendance marked!');
-      
-      // After a successful scan, refresh the attendance list
+
       if (res.status === 201 || res.status === 200) {
         fetchAttendance();
       }
-
     } catch (err) {
       console.error('Scan error:', err);
       const errorMessage = err.response?.data?.message || '❌ Invalid QR code';
       setMessage(errorMessage);
     } finally {
-      // Reset the message and unlock the scanner after 3 seconds
+      // Unlock and restart scanner after 3 seconds
       setTimeout(() => {
         setMessage('');
         scanLock.current = false;
+        setScannerKey(prev => prev + 1); // force scanner remount
       }, 3000);
     }
   };
@@ -77,6 +70,7 @@ export default function QRScanner() {
       <div className="mt-4 flex flex-col items-center">
         <div className="w-full max-w-xs sm:max-w-sm aspect-square overflow-hidden rounded-lg shadow-lg border-2 border-gray-300">
           <QrScanner
+            key={scannerKey} // ✅ forces camera restart after scan
             delay={300}
             style={{ width: '100%', height: '100%' }}
             onError={handleError}

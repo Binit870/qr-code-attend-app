@@ -13,18 +13,26 @@ export default function QRCodeGenerator() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("QR generation error:", err);
+        console.error('QR generation error:', err);
         setError(true);
         setLoading(false);
       });
   }, []);
 
   if (loading) {
-    return <p className="text-center text-gray-600 mt-4">🔄 Generating QR code...</p>;
+    return (
+      <p className="text-center text-[#008B8B] font-medium mt-4">
+        🔄 Generating your QR code...
+      </p>
+    );
   }
 
   if (error) {
-    return <p className="text-center text-red-500 mt-4">❌ Failed to generate QR code</p>;
+    return (
+      <p className="text-center text-red-500 font-medium mt-4">
+        ❌ Failed to generate QR code
+      </p>
+    );
   }
 
   return (
@@ -33,7 +41,7 @@ export default function QRCodeGenerator() {
         <img
           src={qr}
           alt="QR Code"
-          className="w-64 max-w-full rounded border shadow"
+          className="w-64 max-w-full rounded-lg border border-gray-200 shadow-md p-2 bg-white"
         />
       )}
     </div>
